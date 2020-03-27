@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "505505483861",
+    "firebase_url": "https://peoplesign-c0dec.firebaseio.com",
+    "project_id": "peoplesign-c0dec",
+    "storage_bucket": "peoplesign-c0dec.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:505505483861:android:e3d273dab8c3290d8c98dc",
+        "android_client_info": {
+          "package_name": "net.momoku.peoplesign"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "505505483861-l7hpnsvn7bkivogg6em177do47a0shao.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBwqwMomEUC2Y26fus4afolIyl_QdQ5goY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "505505483861-l7hpnsvn7bkivogg6em177do47a0shao.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
