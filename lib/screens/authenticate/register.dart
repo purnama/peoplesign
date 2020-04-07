@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:peoplesign/services/auth.dart';
-import 'package:peoplesign/shared/Loading.dart';
-import 'package:peoplesign/shared/contants.dart';
+import 'package:peoplesign/shared/loading.dart';
+import 'package:peoplesign/shared/constants.dart';
 
 class Register extends StatefulWidget {
   final Function toggleView;
