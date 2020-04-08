@@ -40,3 +40,6 @@ lib/generated_plugin_registrant.dart
 
 gradlew.bat
 gradlew
+/.idea/
+/gradle/wrapper/
+/android/.idea/

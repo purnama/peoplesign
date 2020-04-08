@@ -8,11 +8,14 @@ class DatabaseService {
   final CollectionReference peopleCollection =
       Firestore.instance.collection('peoples');
 
+  final CollectionReference userCollection =
+      Firestore.instance.collection('users');
+
   final String uid;
 
   DatabaseService({this.uid});
 
-  Future updateUserData(String name, Position position, DateTime clockIn,
+  Future updatePeopleData(String name, Position position, DateTime clockIn,
       DateTime clockOut, String sugars, int strength) async {
     return await peopleCollection.document(uid).setData({
       'name': name,
@@ -21,6 +24,14 @@ class DatabaseService {
       'clockOut': clockOut,
       'sugars': sugars,
       'strength': strength,
+    });
+  }
+
+  Future updateUserData(User user) async {
+    return await userCollection.document(uid).setData({
+      'displayName': user.displayName,
+      'photoUrl': user.photoUrl,
+      'email': user.email,
     });
   }
 
@@ -39,8 +50,8 @@ class DatabaseService {
   }
 
   // userData from snapshot
-  UserData _userDataFromSnapshot(DocumentSnapshot documentSnapshot){
-    return UserData(
+  PeopleData _peopleDataFromSnapshot(DocumentSnapshot documentSnapshot) {
+    return PeopleData(
       uid: uid,
       name: documentSnapshot.data['name'],
       sugars: documentSnapshot.data['sugars'],
@@ -53,8 +64,11 @@ class DatabaseService {
     return peopleCollection.snapshots().map(_peopleListFromSnapshot);
   }
 
-  // get user document stream
-  Stream<UserData> get userData {
-    return peopleCollection.document(uid).snapshots().map(_userDataFromSnapshot);
+  // get people document stream
+  Stream<PeopleData> get peopleData {
+    return peopleCollection
+        .document(uid)
+        .snapshots()
+        .map(_peopleDataFromSnapshot);
   }
 }

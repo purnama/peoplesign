@@ -7,11 +7,11 @@ class User {
   User({this.uid, this.displayName, this.email, this.photoUrl});
 }
 
-class UserData {
+class PeopleData {
   final String uid;
   final String name;
   final String sugars;
   final int strength;
 
-  UserData({this.uid, this.name, this.sugars, this.strength});
+  PeopleData({this.uid, this.name, this.sugars, this.strength});
 }

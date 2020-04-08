@@ -61,9 +61,14 @@ class AuthService {
 
       // create a new document for the user with the uid
       await DatabaseService(uid: firebaseUser.uid)
-          .updateUserData('New people', null, null, null, '0', 100);
+          .updatePeopleData('New people', null, null, null, '0', 100);
 
-      return _userFromFirebaseUser(firebaseUser);
+      User userFromFirebaseUser = _userFromFirebaseUser(firebaseUser);
+
+      await DatabaseService(uid: firebaseUser.uid)
+          .updateUserData(userFromFirebaseUser);
+
+      return userFromFirebaseUser;
     } catch (exception) {
       print(exception.toString());
       return null;
@@ -82,7 +87,10 @@ class AuthService {
           accessToken: googleSignInAuthentication.accessToken);
       AuthResult authResult = await _auth.signInWithCredential(authCredential);
       FirebaseUser firebaseUser = authResult.user;
-      return _userFromFirebaseUser(firebaseUser);
+      User userFromFirebaseUser = _userFromFirebaseUser(firebaseUser);
+      await DatabaseService(uid: firebaseUser.uid)
+          .updateUserData(userFromFirebaseUser);
+      return userFromFirebaseUser;
     } catch (exception) {
       print(exception.toString());
       return null;
@@ -98,7 +106,10 @@ class AuthService {
           accessToken: facebookLogin.accessToken.token);
       AuthResult authResult = await _auth.signInWithCredential(authCredential);
       FirebaseUser firebaseUser = authResult.user;
-      return _userFromFirebaseUser(firebaseUser);
+      User userFromFirebaseUser = _userFromFirebaseUser(firebaseUser);
+      await DatabaseService(uid: firebaseUser.uid)
+          .updateUserData(userFromFirebaseUser);
+      return userFromFirebaseUser;
     } catch (exception) {
       print(exception.toString());
       return null;
@@ -115,7 +126,10 @@ class AuthService {
           authTokenSecret: twitterLoginResult.session.secret);
       AuthResult authResult = await _auth.signInWithCredential(authCredential);
       FirebaseUser firebaseUser = authResult.user;
-      return _userFromFirebaseUser(firebaseUser);
+      User userFromFirebaseUser = _userFromFirebaseUser(firebaseUser);
+      await DatabaseService(uid: firebaseUser.uid)
+          .updateUserData(userFromFirebaseUser);
+      return userFromFirebaseUser;
     } catch (exception) {
       print(exception.toString());
       return null;
