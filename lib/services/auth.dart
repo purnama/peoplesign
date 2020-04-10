@@ -9,22 +9,25 @@ class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   final FacebookLogin _facebookLogin = FacebookLogin();
-  final TwitterLogin _twitterLogin = TwitterLogin(
-      consumerKey: 'xxx',
-      consumerSecret: 'xxx');
+  final TwitterLogin _twitterLogin =
+  TwitterLogin(consumerKey: 'xxx', consumerSecret: 'xxx');
+
+  static String actualCode;
 
   // create user obj based on FirebaseUser
-  User _userFromFirebaseUser(FirebaseUser user) => user != null
-      ? User(
+  User _userFromFirebaseUser(FirebaseUser user) =>
+      user != null
+          ? User(
           uid: user.uid,
           displayName: user.displayName,
           email: user.email,
           photoUrl: user.photoUrl)
-      : null;
+          : null;
 
   // auth change user stream
-  Stream<User> get user => _auth.onAuthStateChanged
-      .map((FirebaseUser user) => _userFromFirebaseUser(user));
+  Stream<User> get user =>
+      _auth.onAuthStateChanged
+          .map((FirebaseUser user) => _userFromFirebaseUser(user));
 
   // sign in anon
   Future<User> signInAnon() async {
@@ -52,8 +55,8 @@ class AuthService {
   }
 
   // register with email & password
-  Future<User> registerWithEmailAndPassword(
-      String email, String password) async {
+  Future<User> registerWithEmailAndPassword(String email,
+      String password) async {
     try {
       AuthResult authResult = await _auth.createUserWithEmailAndPassword(
           email: email, password: password);
@@ -79,9 +82,9 @@ class AuthService {
   Future<User> signInWithGoogle() async {
     try {
       final GoogleSignInAccount googleSignInAccount =
-          await _googleSignIn.signIn();
+      await _googleSignIn.signIn();
       final GoogleSignInAuthentication googleSignInAuthentication =
-          await googleSignInAccount.authentication;
+      await googleSignInAccount.authentication;
       final AuthCredential authCredential = GoogleAuthProvider.getCredential(
           idToken: googleSignInAuthentication.idToken,
           accessToken: googleSignInAuthentication.accessToken);
@@ -101,7 +104,7 @@ class AuthService {
   Future<User> signInWithFacebook() async {
     try {
       final FacebookLoginResult facebookLogin =
-          await _facebookLogin.logIn(['email']);
+      await _facebookLogin.logIn(['email']);
       final AuthCredential authCredential = FacebookAuthProvider.getCredential(
           accessToken: facebookLogin.accessToken.token);
       AuthResult authResult = await _auth.signInWithCredential(authCredential);
@@ -120,7 +123,7 @@ class AuthService {
   Future<User> signInWithTwitter() async {
     try {
       final TwitterLoginResult twitterLoginResult =
-          await _twitterLogin.authorize();
+      await _twitterLogin.authorize();
       final AuthCredential authCredential = TwitterAuthProvider.getCredential(
           authToken: twitterLoginResult.session.token,
           authTokenSecret: twitterLoginResult.session.secret);
@@ -129,6 +132,75 @@ class AuthService {
       User userFromFirebaseUser = _userFromFirebaseUser(firebaseUser);
       await DatabaseService(uid: firebaseUser.uid)
           .updateUserData(userFromFirebaseUser);
+      return userFromFirebaseUser;
+    } catch (exception) {
+      print(exception.toString());
+      return null;
+    }
+  }
+
+  // sign in with phone number
+  Future<User> signInWithPhoneNumber(String smsCode) async {
+    try {
+      AuthCredential authCredential = PhoneAuthProvider.getCredential(
+          verificationId: actualCode, smsCode: smsCode);
+
+      AuthResult authResult = await _auth
+          .signInWithCredential(authCredential);
+      User _userFromFirebaseUser(FirebaseUser user) =>
+          user != null
+              ? User(
+              uid: user.uid,
+              displayName: user.displayName,
+              email: user.email,
+              photoUrl: user.photoUrl,
+              phoneNumber: user.phoneNumber)
+              : null;
+
+      FirebaseUser firebaseUser = authResult.user;
+      User userFromFirebaseUser = _userFromFirebaseUser(firebaseUser);
+      await DatabaseService(uid: firebaseUser.uid)
+          .updateUserData(userFromFirebaseUser);
+      return userFromFirebaseUser;
+    } catch (exception) {
+      print(exception.toString());
+      return null;
+    }
+  }
+
+  // verify phone number
+  Future<User> verifyPhoneNumber(String phoneNumber,
+      Function verifyPhone) async {
+    try {
+      User userFromFirebaseUser;
+      await _auth.verifyPhoneNumber(
+        phoneNumber: phoneNumber,
+        timeout: Duration(seconds: 60),
+        verificationCompleted: (AuthCredential authCredential) async {
+          AuthResult authResult =
+          await _auth.signInWithCredential(authCredential);
+          FirebaseUser firebaseUser = authResult.user;
+          userFromFirebaseUser = _userFromFirebaseUser(firebaseUser);
+          await DatabaseService(uid: firebaseUser.uid)
+              .updateUserData(userFromFirebaseUser);
+        },
+        verificationFailed: (AuthException authException) {
+          if (authException.message.contains('not authorized'))
+            print('App not authroized');
+          else if (authException.message.contains('Network'))
+            print('Please check your internet connection and try again');
+          else
+            print('Something has gone wrong, please try later ' +
+                authException.message);
+        },
+        codeSent: (String verificationId, [int forceResendingToken]) async {
+          actualCode = verificationId;
+          verifyPhone();
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {
+          actualCode = verificationId;
+        },
+      );
       return userFromFirebaseUser;
     } catch (exception) {
       print(exception.toString());

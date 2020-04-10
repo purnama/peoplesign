@@ -3,8 +3,9 @@ class User {
   final String displayName;
   final String email;
   final String photoUrl;
+  final String phoneNumber;
 
-  User({this.uid, this.displayName, this.email, this.photoUrl});
+  User({this.uid, this.displayName, this.email, this.photoUrl, this.phoneNumber});
 }
 
 class PeopleData {
