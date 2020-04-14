@@ -21,7 +21,8 @@ class AuthService {
           uid: user.uid,
           displayName: user.displayName,
           email: user.email,
-          photoUrl: user.photoUrl)
+          photoUrl: user.photoUrl,
+          phoneNumber: user.phoneNumber)
           : null;
 
   // auth change user stream
@@ -147,16 +148,6 @@ class AuthService {
 
       AuthResult authResult = await _auth
           .signInWithCredential(authCredential);
-      User _userFromFirebaseUser(FirebaseUser user) =>
-          user != null
-              ? User(
-              uid: user.uid,
-              displayName: user.displayName,
-              email: user.email,
-              photoUrl: user.photoUrl,
-              phoneNumber: user.phoneNumber)
-              : null;
-
       FirebaseUser firebaseUser = authResult.user;
       User userFromFirebaseUser = _userFromFirebaseUser(firebaseUser);
       await DatabaseService(uid: firebaseUser.uid)
@@ -169,20 +160,19 @@ class AuthService {
   }
 
   // verify phone number
-  Future<User> verifyPhoneNumber(String phoneNumber,
-      Function verifyPhone) async {
+  Future<void> verifyPhoneNumber(String phoneNumber, Function verifyFunction) async {
     try {
-      User userFromFirebaseUser;
       await _auth.verifyPhoneNumber(
         phoneNumber: phoneNumber,
         timeout: Duration(seconds: 60),
         verificationCompleted: (AuthCredential authCredential) async {
-          AuthResult authResult =
+          /*AuthResult authResult =
           await _auth.signInWithCredential(authCredential);
           FirebaseUser firebaseUser = authResult.user;
           userFromFirebaseUser = _userFromFirebaseUser(firebaseUser);
           await DatabaseService(uid: firebaseUser.uid)
-              .updateUserData(userFromFirebaseUser);
+              .updateUserData(userFromFirebaseUser);*/
+          print('verification completed');
         },
         verificationFailed: (AuthException authException) {
           if (authException.message.contains('not authorized'))
@@ -195,13 +185,12 @@ class AuthService {
         },
         codeSent: (String verificationId, [int forceResendingToken]) async {
           actualCode = verificationId;
-          verifyPhone();
+          verifyFunction(verificationId);
         },
         codeAutoRetrievalTimeout: (String verificationId) {
           actualCode = verificationId;
         },
       );
-      return userFromFirebaseUser;
     } catch (exception) {
       print(exception.toString());
       return null;

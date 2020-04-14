@@ -32,6 +32,7 @@ class DatabaseService {
       'displayName': user.displayName,
       'photoUrl': user.photoUrl,
       'email': user.email,
+      'phoneNumber': user.phoneNumber,
     });
   }
 

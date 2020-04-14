@@ -3,16 +3,15 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:peoplesign/models/country.dart';
-import 'package:peoplesign/screens/authenticate/phoneAuthVerify.dart';
 import 'package:peoplesign/services/auth.dart';
 import 'package:peoplesign/shared/loading.dart';
 
-class PhoneAuthGetPhone extends StatefulWidget {
+class PhoneAuth extends StatefulWidget {
   @override
-  _PhoneAuthGetPhoneState createState() => _PhoneAuthGetPhoneState();
+  _PhoneAuthState createState() => _PhoneAuthState();
 }
 
-class _PhoneAuthGetPhoneState extends State<PhoneAuthGetPhone> {
+class _PhoneAuthState extends State<PhoneAuth> {
   final AuthService _authService = AuthService();
 
   /*
@@ -23,6 +22,8 @@ class _PhoneAuthGetPhoneState extends State<PhoneAuthGetPhone> {
   double _height, _width, _fixedPadding;
   bool loading = false;
   bool _isCountriesDataFormed = false;
+  String error = '';
+  String code = '';
 
   List<Country> countries = [];
   StreamController<List<Country>> _countriesStreamController;
@@ -32,11 +33,20 @@ class _PhoneAuthGetPhoneState extends State<PhoneAuthGetPhone> {
   TextEditingController _searchCountryController = TextEditingController();
   TextEditingController _phoneNumberController = TextEditingController();
 
+  FocusNode focusNode1 = FocusNode();
+  FocusNode focusNode2 = FocusNode();
+  FocusNode focusNode3 = FocusNode();
+  FocusNode focusNode4 = FocusNode();
+  FocusNode focusNode5 = FocusNode();
+  FocusNode focusNode6 = FocusNode();
+
   /*
    *  This will be the index, we will modify each time the user selects a new country from the dropdown list(dialog),
    *  As a default case, we are using India as default country, index = 101 is Indonesia
    */
   int _selectedCountryIndex = 101;
+
+  String actualCode = null;
 
   @override
   Widget build(BuildContext context) {
@@ -54,6 +64,12 @@ class _PhoneAuthGetPhoneState extends State<PhoneAuthGetPhone> {
       }
     });
 
+    return loading ? Loading() : actualCode == null
+        ? buildGetPhoneScaffold(context)
+        : buildVerifyScaffold(context);
+  }
+
+  Scaffold buildGetPhoneScaffold(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.brown[100],
       body: SafeArea(
@@ -69,11 +85,11 @@ class _PhoneAuthGetPhoneState extends State<PhoneAuthGetPhone> {
                 width: _width * 8 / 10,
 
                 /*
-                 * Fetching countries data from JSON file and storing them in a List of Country model:
-                 * ref:- List<Country> countries
-                 * Until the data is fetched, there will be CircularProgressIndicator showing, describing something is on it's way
-                 * (Previously there was a FutureBuilder rather that the below thing, which created unexpected exceptions and had to be removed)
-                 */
+               * Fetching countries data from JSON file and storing them in a List of Country model:
+               * ref:- List<Country> countries
+               * Until the data is fetched, there will be CircularProgressIndicator showing, describing something is on it's way
+               * (Previously there was a FutureBuilder rather that the below thing, which created unexpected exceptions and had to be removed)
+               */
                 child: !_isCountriesDataFormed
                     ? Center(
                         child: Loading(),
@@ -100,10 +116,10 @@ class _PhoneAuthGetPhoneState extends State<PhoneAuthGetPhone> {
                               ),
 
                               /*
-                           *  Select your country, this will be a custom DropDown menu, rather than just as a dropDown
-                           *  onTap of this, will show a Dialog asking the user to select country they reside,
-                           *  according to their selection, prefix will change in the PhoneNumber TextFormField
-                           */
+                         *  Select your country, this will be a custom DropDown menu, rather than just as a dropDown
+                         *  onTap of this, will show a Dialog asking the user to select country they reside,
+                         *  according to their selection, prefix will change in the PhoneNumber TextFormField
+                         */
                               Padding(
                                 padding: EdgeInsets.only(
                                     left: _fixedPadding, right: _fixedPadding),
@@ -160,8 +176,8 @@ class _PhoneAuthGetPhoneState extends State<PhoneAuthGetPhone> {
                                 ),
                               ),
                               /*
-                                 *  Some informative text
-                                 */
+                               *  Some informative text
+                               */
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: <Widget>[
@@ -194,10 +210,10 @@ class _PhoneAuthGetPhoneState extends State<PhoneAuthGetPhone> {
                                 ],
                               ),
                               /*
-                                 *  Button: OnTap of this, it appends the dial code and the phone number entered by the user to send OTP,
-                                 *  knowing once the OTP has been sent to the user - the user will be navigated to a new Screen,
-                                 *  where is asked to enter the OTP he has received on his mobile (or) wait for the system to automatically detect the OTP
-                                 */
+                               *  Button: OnTap of this, it appends the dial code and the phone number entered by the user to send OTP,
+                               *  knowing once the OTP has been sent to the user - the user will be navigated to a new Screen,
+                               *  where is asked to enter the OTP he has received on his mobile (or) wait for the system to automatically detect the OTP
+                               */
                               SizedBox(height: _fixedPadding * 1.5),
                               RaisedButton(
                                 elevation: 16.0,
@@ -205,21 +221,16 @@ class _PhoneAuthGetPhoneState extends State<PhoneAuthGetPhone> {
                                   setState(() {
                                     this.loading = true;
                                   });
-                                  dynamic result = await _authService
-                                      .verifyPhoneNumber(
-                                          countries[_selectedCountryIndex]
-                                                  .dialCode +
-                                              _phoneNumberController.text, () {
-                                    Navigator.of(context).pushReplacement(
-                                        MaterialPageRoute(
-                                            builder: (BuildContext context) =>
-                                                PhoneAuthVerify()));
+                                  await _authService.verifyPhoneNumber(
+                                      countries[_selectedCountryIndex]
+                                              .dialCode +
+                                          _phoneNumberController.text,
+                                      (String verificationCode) => setState(
+                                          () => this.actualCode =
+                                              verificationCode));
+                                  setState(() {
+                                    this.loading = false;
                                   });
-                                  if (result == null) {
-                                    setState(() {
-                                      this.loading = false;
-                                    });
-                                  }
                                 },
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
@@ -236,6 +247,183 @@ class _PhoneAuthGetPhoneState extends State<PhoneAuthGetPhone> {
                               ),
                             ],
                           ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // This will return pin field - it accepts only single char
+  Widget getPinField({String key, FocusNode focusNode, BuildContext context}) =>
+      SizedBox(
+        height: 40.0,
+        width: 35.0,
+        child: TextField(
+          key: Key(key),
+          expands: false,
+          autofocus: key.contains("1") ? true : false,
+          focusNode: focusNode,
+          onChanged: (String value) {
+            if (value.length == 1) {
+              code += value;
+              switch (code.length) {
+                case 1:
+                  FocusScope.of(context).requestFocus(focusNode2);
+                  break;
+                case 2:
+                  FocusScope.of(context).requestFocus(focusNode3);
+                  break;
+                case 3:
+                  FocusScope.of(context).requestFocus(focusNode4);
+                  break;
+                case 4:
+                  FocusScope.of(context).requestFocus(focusNode5);
+                  break;
+                case 5:
+                  FocusScope.of(context).requestFocus(focusNode6);
+                  break;
+                default:
+                  FocusScope.of(context).requestFocus(FocusNode());
+                  break;
+              }
+            }
+          },
+          maxLengthEnforced: false,
+          textAlign: TextAlign.center,
+          cursorColor: Colors.white,
+          keyboardType: TextInputType.number,
+          style: TextStyle(
+              fontSize: 20.0, fontWeight: FontWeight.w600, color: Colors.white),
+        ),
+      );
+
+  Scaffold buildVerifyScaffold(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.brown[100],
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            child: Card(
+              color: Colors.brown[100],
+              elevation: 2.0,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0)),
+              child: SizedBox(
+                height: _height * 8 / 10,
+                width: _width * 8 / 10,
+                child: Column(
+                  children: <Widget>[
+                    SizedBox(height: 40.0),
+                    // AppName:
+                    Text('Input OTP',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            color: Colors.brown[500],
+                            fontSize: 24.0,
+                            fontWeight: FontWeight.w700)),
+
+                    SizedBox(height: 20.0),
+
+                    //  Info text
+                    Row(
+                      children: <Widget>[
+                        SizedBox(width: 16.0),
+                        Expanded(
+                          child: RichText(
+                            text: TextSpan(
+                              children: [
+                                TextSpan(
+                                    text: 'Please enter the ',
+                                    style: TextStyle(
+                                        color: Colors.brown[500],
+                                        fontWeight: FontWeight.w400)),
+                                TextSpan(
+                                    text: 'One Time Password',
+                                    style: TextStyle(
+                                        color: Colors.brown[500],
+                                        fontSize: 16.0,
+                                        fontWeight: FontWeight.w700)),
+                                TextSpan(
+                                  text: ' sent to your mobile',
+                                  style: TextStyle(
+                                      color: Colors.brown[500],
+                                      fontWeight: FontWeight.w400),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 16.0),
+                      ],
+                    ),
+
+                    SizedBox(height: 16.0),
+
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        getPinField(
+                            key: "1", focusNode: focusNode1, context: context),
+                        SizedBox(width: 5.0),
+                        getPinField(
+                            key: "2", focusNode: focusNode2, context: context),
+                        SizedBox(width: 5.0),
+                        getPinField(
+                            key: "3", focusNode: focusNode3, context: context),
+                        SizedBox(width: 5.0),
+                        getPinField(
+                            key: "4", focusNode: focusNode4, context: context),
+                        SizedBox(width: 5.0),
+                        getPinField(
+                            key: "5", focusNode: focusNode5, context: context),
+                        SizedBox(width: 5.0),
+                        getPinField(
+                            key: "6", focusNode: focusNode6, context: context),
+                        SizedBox(width: 5.0),
+                      ],
+                    ),
+                    SizedBox(height: 20.0),
+                    Text(
+                      this.error,
+                      style: TextStyle(color: Colors.red, fontSize: 14.0),
+                    ),
+                    SizedBox(height: 20.0),
+                    RaisedButton(
+                      elevation: 16.0,
+                      onPressed: () async {
+                        if (code.length != 6) {
+                          this.error = 'Please enter your OTP Number';
+                        } else {
+                          setState(() {
+                            this.loading = true;
+                          });
+                          dynamic result =
+                              await _authService.signInWithPhoneNumber(code);
+                          if (result == null) {
+                            setState(() {
+                              this.loading = false;
+                              this.error =
+                              'could not sign in with those credentials';
+                            });
+                          }
+                        }
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          'VERIFY',
+                          style: TextStyle(
+                              color: Colors.brown[500], fontSize: 18.0),
+                        ),
+                      ),
+                      color: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30.0)),
+                    )
+                  ],
+                ),
               ),
             ),
           ),

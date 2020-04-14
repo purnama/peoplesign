@@ -43,3 +43,4 @@ gradlew
 /.idea/
 /gradle/wrapper/
 /android/.idea/
+/ios/Podfile

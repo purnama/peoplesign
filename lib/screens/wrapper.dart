@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:peoplesign/models/user.dart';
-import 'package:peoplesign/screens/authenticate/phoneAuthGetPhone.dart';
+import 'package:peoplesign/screens/authenticate/phoneAuth.dart';
 import 'package:peoplesign/screens/home/home.dart';
 import 'package:provider/provider.dart';
 
@@ -13,7 +13,7 @@ class Wrapper extends StatelessWidget {
 
     //return either Homer or Authenticate widget
     if (user == null) {
-      return PhoneAuthGetPhone();
+      return PhoneAuth();
       //return Authenticate();
     } else {
       return Home();
