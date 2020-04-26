@@ -1,11 +1,12 @@
 class User {
   final String uid;
-  final String displayName;
-  final String email;
-  final String photoUrl;
-  final String phoneNumber;
+  String displayName;
+  String email;
+  String photoUrl;
+  String phoneNumber;
 
   User({this.uid, this.displayName, this.email, this.photoUrl, this.phoneNumber});
+
 }
 
 class PeopleData {

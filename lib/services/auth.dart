@@ -4,31 +4,30 @@ import 'package:flutter_twitter_login/flutter_twitter_login.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:peoplesign/models/user.dart';
 import 'package:peoplesign/services/database.dart';
+import 'package:peoplesign/services/exceptions.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   final FacebookLogin _facebookLogin = FacebookLogin();
   final TwitterLogin _twitterLogin =
-  TwitterLogin(consumerKey: 'xxx', consumerSecret: 'xxx');
+      TwitterLogin(consumerKey: 'xxx', consumerSecret: 'xxx');
 
   static String actualCode;
 
   // create user obj based on FirebaseUser
-  User _userFromFirebaseUser(FirebaseUser user) =>
-      user != null
-          ? User(
+  User _userFromFirebaseUser(FirebaseUser user) => user != null
+      ? User(
           uid: user.uid,
           displayName: user.displayName,
           email: user.email,
           photoUrl: user.photoUrl,
           phoneNumber: user.phoneNumber)
-          : null;
+      : null;
 
   // auth change user stream
-  Stream<User> get user =>
-      _auth.onAuthStateChanged
-          .map((FirebaseUser user) => _userFromFirebaseUser(user));
+  Stream<User> get user => _auth.onAuthStateChanged
+      .map((FirebaseUser user) => _userFromFirebaseUser(user));
 
   // sign in anon
   Future<User> signInAnon() async {
@@ -44,24 +43,25 @@ class AuthService {
 
   // sign in with email & password
   Future<User> signInWithEmailAndPassword(String email, String password) async {
-    try {
-      AuthResult authResult = await _auth.signInWithEmailAndPassword(
-          email: email, password: password);
-      FirebaseUser firebaseUser = authResult.user;
+    AuthResult authResult = await _auth.signInWithEmailAndPassword(
+        email: email, password: password);
+    FirebaseUser firebaseUser = authResult.user;
+    if (firebaseUser.isEmailVerified) {
       return _userFromFirebaseUser(firebaseUser);
-    } catch (exception) {
-      print(exception.toString());
-      return null;
+    } else {
+      signOut();
+      throw SignInException('Please verify your email first!');
     }
   }
 
   // register with email & password
-  Future<User> registerWithEmailAndPassword(String email,
-      String password) async {
+  Future<User> registerWithEmailAndPassword(
+      String name, String email, String password) async {
     try {
       AuthResult authResult = await _auth.createUserWithEmailAndPassword(
           email: email, password: password);
       FirebaseUser firebaseUser = authResult.user;
+
       await firebaseUser.sendEmailVerification();
 
       // create a new document for the user with the uid
@@ -69,7 +69,7 @@ class AuthService {
           .updatePeopleData('New people', null, null, null, '0', 100);
 
       User userFromFirebaseUser = _userFromFirebaseUser(firebaseUser);
-
+      userFromFirebaseUser.displayName = name;
       await DatabaseService(uid: firebaseUser.uid)
           .updateUserData(userFromFirebaseUser);
 
@@ -84,9 +84,9 @@ class AuthService {
   Future<User> signInWithGoogle() async {
     try {
       final GoogleSignInAccount googleSignInAccount =
-      await _googleSignIn.signIn();
+          await _googleSignIn.signIn();
       final GoogleSignInAuthentication googleSignInAuthentication =
-      await googleSignInAccount.authentication;
+          await googleSignInAccount.authentication;
       final AuthCredential authCredential = GoogleAuthProvider.getCredential(
           idToken: googleSignInAuthentication.idToken,
           accessToken: googleSignInAuthentication.accessToken);
@@ -106,7 +106,7 @@ class AuthService {
   Future<User> signInWithFacebook() async {
     try {
       final FacebookLoginResult facebookLogin =
-      await _facebookLogin.logIn(['email']);
+          await _facebookLogin.logIn(['email']);
       final AuthCredential authCredential = FacebookAuthProvider.getCredential(
           accessToken: facebookLogin.accessToken.token);
       AuthResult authResult = await _auth.signInWithCredential(authCredential);
@@ -125,7 +125,7 @@ class AuthService {
   Future<User> signInWithTwitter() async {
     try {
       final TwitterLoginResult twitterLoginResult =
-      await _twitterLogin.authorize();
+          await _twitterLogin.authorize();
       final AuthCredential authCredential = TwitterAuthProvider.getCredential(
           authToken: twitterLoginResult.session.token,
           authTokenSecret: twitterLoginResult.session.secret);
@@ -147,8 +147,7 @@ class AuthService {
       AuthCredential authCredential = PhoneAuthProvider.getCredential(
           verificationId: actualCode, smsCode: smsCode);
 
-      AuthResult authResult = await _auth
-          .signInWithCredential(authCredential);
+      AuthResult authResult = await _auth.signInWithCredential(authCredential);
       FirebaseUser firebaseUser = authResult.user;
       User userFromFirebaseUser = _userFromFirebaseUser(firebaseUser);
       await DatabaseService(uid: firebaseUser.uid)
@@ -161,7 +160,8 @@ class AuthService {
   }
 
   // verify phone number
-  Future<void> verifyPhoneNumber(String phoneNumber, Function verifyFunction) async {
+  Future<void> verifyPhoneNumber(
+      String phoneNumber, Function verifyFunction) async {
     try {
       await _auth.verifyPhoneNumber(
         phoneNumber: phoneNumber,

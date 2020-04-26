@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_signin_button/button_list.dart';
 import 'package:flutter_signin_button/button_view.dart';
 import 'package:peoplesign/services/auth.dart';
+import 'package:peoplesign/services/exceptions.dart';
 import 'package:peoplesign/shared/loading.dart';
 import 'package:peoplesign/shared/constants.dart';
 
@@ -86,13 +87,21 @@ class _SignInState extends State<SignIn> {
                           setState(() {
                             this.loading = true;
                           });
-                          dynamic result = await _authService
-                              .signInWithEmailAndPassword(email, password);
-                          if (result == null) {
+                          try {
+                            dynamic result = await _authService
+                                .signInWithEmailAndPassword(email, password);
+                            if (result == null) {
+                              setState(() {
+                                this.loading = false;
+                                this.error =
+                                    'could not sign in with those credentials';
+                              });
+                            }
+                          } on SignInException catch (ex) {
                             setState(() {
                               this.loading = false;
                               this.error =
-                                  'could not sign in with those credentials';
+                                  ex.message;
                             });
                           }
                         }
@@ -142,8 +151,7 @@ class _SignInState extends State<SignIn> {
                         setState(() {
                           this.loading = true;
                         });
-                        dynamic result =
-                            await _authService.signInWithTwitter();
+                        dynamic result = await _authService.signInWithTwitter();
                         if (result == null) {
                           setState(() {
                             this.loading = false;
