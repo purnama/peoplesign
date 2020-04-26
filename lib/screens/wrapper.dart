@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:peoplesign/models/user.dart';
-import 'package:peoplesign/screens/authenticate/phoneAuth.dart';
+import 'package:peoplesign/screens/authenticate/phone_auth.dart';
 import 'package:peoplesign/screens/home/home.dart';
 import 'package:provider/provider.dart';
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:peoplesign/models/people.dart';
-import 'package:peoplesign/screens/home/peopleList.dart';
-import 'package:peoplesign/screens/home/settingsForm.dart';
+import 'package:peoplesign/screens/home/people_list.dart';
+import 'package:peoplesign/screens/home/settings_form.dart';
 import 'package:peoplesign/services/auth.dart';
 import 'package:peoplesign/services/database.dart';
 import 'package:provider/provider.dart';

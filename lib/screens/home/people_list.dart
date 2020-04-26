@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:peoplesign/models/people.dart';
-import 'package:peoplesign/screens/home/peopleTile.dart';
+import 'package:peoplesign/screens/home/people_tile.dart';
 import 'package:provider/provider.dart';
 
 class PeopleList extends StatefulWidget {
