@@ -27,13 +27,18 @@ class DatabaseService {
     });
   }
 
-  Future updateUserData(User user) async {
+  Future<void> updateUserData(User user) async {
     return await userCollection.document(uid).setData({
       'displayName': user.displayName,
       'photoUrl': user.photoUrl,
       'email': user.email,
       'phoneNumber': user.phoneNumber,
     });
+  }
+
+  Future<bool> isUserDataExist() async{
+    DocumentSnapshot documentSnapshot = await userCollection.document(uid).get();
+    return documentSnapshot != null;
   }
 
   // poeple list from snapshot

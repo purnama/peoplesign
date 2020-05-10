@@ -9,14 +9,15 @@ import 'authenticate/authenticate.dart';
 class Wrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final user = Provider.of<User>(context);
+    final User user = Provider.of<User>(context);
 
     //return either Homer or Authenticate widget
     if (user == null) {
-      //return PhoneAuth();
       return Authenticate();
-    } else {
-      return Home();
     }
+    if (user.phoneNumber == null) {
+      return PhoneAuth();
+    }
+    return Home();
   }
 }

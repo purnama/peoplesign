@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:peoplesign/services/auth.dart';
+import 'package:peoplesign/services/exceptions/register_exception.dart';
 import 'package:peoplesign/shared/loading.dart';
 import 'package:peoplesign/shared/constants.dart';
+import 'package:flutter/services.dart';
 
 class Register extends StatefulWidget {
   final Function toggleView;
@@ -50,6 +52,7 @@ class _RegisterState extends State<Register> {
               TextFormField(
                 decoration: textInputDecoration.copyWith(hintText: 'Your Name'),
                 validator: (val) => val.isEmpty ? 'Enter a name' : null,
+                initialValue: this.name,
                 onChanged: (val) {
                   setState(() {
                     this.name = val;
@@ -59,6 +62,7 @@ class _RegisterState extends State<Register> {
               SizedBox(height: 20.0),TextFormField(
                 decoration: textInputDecoration.copyWith(hintText: 'Email'),
                 validator: (val) => val.isEmpty ? 'Enter an email' : null,
+                initialValue: this.email,
                 onChanged: (val) {
                   setState(() {
                     this.email = val;
@@ -89,13 +93,15 @@ class _RegisterState extends State<Register> {
                     setState(() {
                       this.loading = true;
                     });
-                    dynamic result =
-                        await _authService.registerWithEmailAndPassword(this.name,
-                            this.email, this.password);
-                    if(result == null){
+                    try {
+                      dynamic result =
+                      await _authService.registerWithEmailAndPassword(this.name,
+                          this.email, this.password);
+                    } on RegisterException catch(exception){
+                      bool test = true;
                       setState(() {
                         this.loading = false;
-                        this.error = 'please supply a valid email';
+                        this.error = exception.message;
                       });
                     }
                   }

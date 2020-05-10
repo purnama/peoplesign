@@ -1,10 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import 'package:flutter_twitter_login/flutter_twitter_login.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:peoplesign/models/user.dart';
 import 'package:peoplesign/services/database.dart';
 import 'package:peoplesign/services/exceptions.dart';
+import 'package:peoplesign/services/exceptions/register_exception.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -57,9 +59,13 @@ class AuthService {
   // register with email & password
   Future<User> registerWithEmailAndPassword(
       String name, String email, String password) async {
-    try {
-      AuthResult authResult = await _auth.createUserWithEmailAndPassword(
-          email: email, password: password);
+      AuthResult authResult;
+      try {
+        authResult = await _auth.createUserWithEmailAndPassword(
+            email: email, password: password);
+      } on PlatformException catch(exception){
+        throw RegisterException(exception);
+      }
       FirebaseUser firebaseUser = authResult.user;
 
       await firebaseUser.sendEmailVerification();
@@ -70,14 +76,12 @@ class AuthService {
 
       User userFromFirebaseUser = _userFromFirebaseUser(firebaseUser);
       userFromFirebaseUser.displayName = name;
+
       await DatabaseService(uid: firebaseUser.uid)
           .updateUserData(userFromFirebaseUser);
 
       return userFromFirebaseUser;
-    } catch (exception) {
-      print(exception.toString());
-      return null;
-    }
+
   }
 
   // sign in with google
@@ -129,6 +133,7 @@ class AuthService {
       final AuthCredential authCredential = TwitterAuthProvider.getCredential(
           authToken: twitterLoginResult.session.token,
           authTokenSecret: twitterLoginResult.session.secret);
+
       AuthResult authResult = await _auth.signInWithCredential(authCredential);
       FirebaseUser firebaseUser = authResult.user;
       User userFromFirebaseUser = _userFromFirebaseUser(firebaseUser);
@@ -142,11 +147,10 @@ class AuthService {
   }
 
   // sign in with phone number
-  Future<User> signInWithPhoneNumber(String smsCode) async {
+  Future<User> signInWithPhoneNumber(String smsCode, FirebaseUser firebaseUser) async {
     try {
       AuthCredential authCredential = PhoneAuthProvider.getCredential(
           verificationId: actualCode, smsCode: smsCode);
-
       AuthResult authResult = await _auth.signInWithCredential(authCredential);
       FirebaseUser firebaseUser = authResult.user;
       User userFromFirebaseUser = _userFromFirebaseUser(firebaseUser);
