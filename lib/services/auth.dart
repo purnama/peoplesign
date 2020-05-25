@@ -147,7 +147,7 @@ class AuthService {
   }
 
   // sign in with phone number
-  Future<User> signInWithPhoneNumber(String smsCode, FirebaseUser firebaseUser) async {
+  Future<User> signInWithPhoneNumber(String smsCode) async {
     try {
       AuthCredential authCredential = PhoneAuthProvider.getCredential(
           verificationId: actualCode, smsCode: smsCode);
